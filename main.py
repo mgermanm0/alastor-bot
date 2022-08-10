@@ -1,10 +1,15 @@
+from dotenv import load_dotenv
+load_dotenv()
+
+import os
 import discord
 from discord import FFmpegPCMAudio
 from discord.ext import commands
 from discord.utils import get
-import youtube_dl
-import os
-import requests
+from constants import Constants
+from music.ytdl import YTDLUtils
+
+
 bot = commands.Bot(command_prefix='>')
 
 @bot.event
@@ -17,36 +22,26 @@ async def on_ready():
 async def connect(ctx):
     voice = ctx.author.voice
     if not voice:
-        await ctx.reply("Subnormal conectate a un canal de voz xd")
+        await ctx.reply("¡Hey! Primero debes de conectarte a un canal de voz")
         return
     vc = await voice.channel.connect()
     await ctx.guild.change_voice_state(channel=voice.channel, self_mute=False, self_deaf=True)
     print("conectado")
-    await ctx.reply("oleeee ya estoy")
-    
-def search(query):
-    with youtube_dl.YoutubeDL({'format': 'bestaudio', 'noplaylist':'True'}) as ydl:
-        try: 
-            requests.get(query)
-        except: # Ocurre un error
-            info = ydl.extract_info(f"ytsearch:{query}", download=False)['entries'][0]
-        else: # No ocurre ningún error
-            info = ydl.extract_info(query, download=False)
-            
-    return (info, info['formats'][0]['url'])
+    await ctx.reply("¡Dentro!")
+
 
 @bot.command()
 async def play(ctx, *args):
     song = ' '.join(args)
     if ctx.voice_client is None:
-        await ctx.reply("no crees que para cantar primero debes de meterme en un canal de voz? xd")
-        
-    FFMPEG_OPTS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
-    video, src = search(song)
+        await ctx.reply("No estoy en un canal de voz. Usa `>connect` para entrar en el canal que estés conectado.")
+        return
+    
+    video, src = YTDLUtils.search(song)
     voice = get(bot.voice_clients, guild=ctx.guild)
 
-    audio = FFmpegPCMAudio(src ,**FFMPEG_OPTS)
+    audio = FFmpegPCMAudio(src ,**Constants.FFMPEG_OPTS)
     voice.play(audio)
-    await ctx.reply("Reproduciendo esto: " + video['title'] + "\n" + video['webpage_url'])
+    await ctx.reply("Reproduciendo: " + video['title'] + "\n" + video['webpage_url'])
     
-bot.run('TU TOKEN AQUI')
+bot.run(os.getenv('TOKEN'))
