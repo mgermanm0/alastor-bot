@@ -25,7 +25,7 @@ async def connect(ctx):
     if not voice:
         await ctx.reply("¡Hey! Primero debes de conectarte a un canal de voz")
         return
-    vc = await voice.channel.connect()
+    await voice.channel.connect()
     await ctx.guild.change_voice_state(channel=voice.channel, self_mute=False, self_deaf=True)
     print("conectado")
     await ctx.reply("¡Dentro!")
@@ -41,11 +41,31 @@ async def play(ctx, *args):
     video, src = YTDLUtils.search(song)
     voice = get(bot.voice_clients, guild=ctx.guild)
 
-    audio = FFmpegPCMAudio(src ,**Constants.FFMPEG_OPTS)
+    audio = FFmpegPCMAudio(src, **Constants.FFMPEG_OPTS)
     voice.play(audio)
     embedmsg = discord.Embed(title="Reproduciendo...", url=video['webpage_url'], description=video['title'])
     embedmsg.add_field(name="URL de la canción", value=video['webpage_url'])
     embedmsg.set_thumbnail(url=video['thumbnails'][-1]['url'])
     await ctx.reply(embed=embedmsg) 
+    
+@bot.command()
+async def pause(ctx):
+    if ctx.voice_client is None:
+        await ctx.reply("No estoy en un canal de voz. Usa `>connect` para entrar en el canal que estés conectado y reproducir así música.")
+        return
+    
+    voice = get(bot.voice_clients, guild=ctx.guild)
+    voice.pause()
+    await ctx.reply("Pausado")
+
+@bot.command()
+async def resume(ctx):
+    if ctx.voice_client is None:
+        await ctx.reply("No estoy en un canal de voz. Usa `>connect` para entrar en el canal que estés conectado y reproducir así música.")
+        return
+    
+    voice = get(bot.voice_clients, guild=ctx.guild)
+    voice.resume()
+    await ctx.reply("Renaudando reproducción")
     
 bot.run(os.getenv('TOKEN'))
