@@ -1,5 +1,3 @@
-# This example requires the 'members' privileged intents
-
 import discord
 from discord import FFmpegPCMAudio
 from discord.ext import commands
