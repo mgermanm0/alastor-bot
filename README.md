@@ -1,7 +1,7 @@
 # Alastor Bot
 Needed:
 - Python 3.9 or higher recommendad
-- Libraries described in requirements.py
+- Libraries described in requirements.txt
 - FFmpeg installed on your machine
 - Discord Developer Portal (https://discord.com/developers/applications) Bot token
 
