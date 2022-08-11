@@ -1,7 +1,7 @@
 from turtle import title
 from dotenv import load_dotenv
 load_dotenv()
-
+from asyncio import coroutine, run
 import os
 import discord
 from discord import FFmpegPCMAudio
@@ -31,16 +31,13 @@ async def connect(ctx):
     print("conectado")
     await ctx.reply("¡Dentro!")
 
-
-def queueHandler(voice, textchannel):
+#TODO: Send informative message with the title of the song that is beign played
+def queueHandler(e, voice, textchannel):
+    print("next song")
     nextsong = musicplayer.pop(voice.channel.id)
     if nextsong is not None:
         audio = FFmpegPCMAudio(nextsong['formats'][0]['url'], **Constants.FFMPEG_OPTS)
         voice.play(audio)
-        embedmsg = discord.Embed(title="Reproduciendo...", url=nextsong['webpage_url'], description=nextsong['title'])
-        embedmsg.add_field(name="URL de la canción", value=nextsong['webpage_url'])
-        embedmsg.set_thumbnail(url=nextsong['thumbnails'][-1]['url'])
-        textchannel.send(embed=embedmsg)
         
 @bot.command()
 async def play(ctx, *args): 
@@ -60,7 +57,7 @@ async def play(ctx, *args):
     else:
         song = musicplayer.pop(voice.channel.id)['formats'][0]['url']
         audio = FFmpegPCMAudio(song, **Constants.FFMPEG_OPTS)
-        voice.play(audio, after=lambda e: queueHandler(voice, ctx.channel))
+        voice.play(audio, after=lambda e: queueHandler(e, voice, ctx.channel))
     
     embedmsg = discord.Embed(title=title, url=video['webpage_url'], description=video['title'])
     embedmsg.add_field(name="URL de la canción", value=video['webpage_url'])
@@ -96,4 +93,23 @@ async def queue(ctx):
     embed = musicplayer.getQueue(voice.channel.id)
     await ctx.reply(embed=embed)
 
+@bot.command()
+async def skip(ctx):
+    if ctx.voice_client is None:
+        await ctx.reply("No estoy en un canal de voz. Usa `>connect` para entrar en el canal que estés conectado y reproducir así música.")
+        return
+    voice = get(bot.voice_clients, guild=ctx.guild)
+    voice.stop()
+    await ctx.reply("Pasando a siguiente canción")
+    
+@bot.command()
+async def stop(ctx):
+    if ctx.voice_client is None:
+        await ctx.reply("No estoy en un canal de voz. Usa `>connect` para entrar en el canal que estés conectado y reproducir así música.")
+        return
+    voice = get(bot.voice_clients, guild=ctx.guild)
+    musicplayer.delQueue(voice.channel.id)
+    voice.stop()
+    await voice.disconnect()
+    await ctx.reply("¡Hasta la próxima!")
 bot.run(os.getenv('TOKEN'))

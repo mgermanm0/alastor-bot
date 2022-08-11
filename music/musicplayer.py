@@ -55,6 +55,8 @@ class MusicPlayer:
         self.__queues[id].push(src)
         
     def pop(self, id):
+        if id not in self.__queues:
+            return None
         return self.__queues[id].pop()
     
     def setLoopMode(self, id, mode):
@@ -65,4 +67,7 @@ class MusicPlayer:
     
     def getQueue(self, id):
         return self.__queues[id].getQueue()
+    
+    def delQueue(self, id):
+        del self.__queues[id]
         
