@@ -14,4 +14,4 @@ class YTDLUtils:
             else: # No ocurre ningún error - Es una URL, reproducir directamente
                 info = ydl.extract_info(query, download=False)
                 
-        return (info, info['formats'][0]['url'])
+        return info
